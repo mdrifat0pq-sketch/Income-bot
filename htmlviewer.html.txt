@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Income Bot - Spin & Earn</title>
+    <style>
+      :root {
+        --primary-color: #00ff88;
+        --bg-color: #0f172a;
+        --card-bg: #1e293b;
+        --text-color: #ffffff
+      }
+
+      body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background-color: var(--bg-color);
+        color: var(--text-color);
+        margin: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        min-height: 100vh
+      }
+
+      .header {
+        width: 100%;
+        padding: 20px;
+        display: flex;
+        justify-content: space-between;
+        background: var(--card-bg);
+        box-shadow: 0 4px 10px rgba(0, 0, 0, .3);
+        position: sticky;
+        top: 0;
+        z-index: 100
+      }
+
+      .balance-box {
+        text-align: center
+      }
+
+      .coin-text {
+        color: var(--primary-color);
+        font-weight: 700;
+        font-size: 1.2rem
+      }
+
+      .container {
+        padding: 20px;
+        text-align: center;
+        max-width: 400px;
+        width: 100%
+      }
+
+      .wheel-container {
+        margin: 30px auto;
+        width: 250px;
+        height: 250px;
+        border: 8px solid var(--card-bg);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        background: conic-gradient(from 0deg, #1e293b, #0f8, #1e293b, #0f8);
+        transition: transform 3s cubic-bezier(.1, 0, .1, 1)
+      }
+
+      .wheel-pointer {
+        position: absolute;
+        top: -10px;
+        width: 0;
+        height: 0;
+        border-left: 15px solid transparent;
+        border-right: 15px solid transparent;
+        border-top: 25px solid #ff4757;
+        z-index: 10
+      }
+
+      button {
+        background: var(--primary-color);
+        color: #000;
+        border: none;
+        padding: 15px 40px;
+        border-radius: 30px;
+        font-weight: 700;
+        font-size: 1rem;
+        cursor: pointer;
+        box-shadow: 0 5px 15px rgba(0, 255, 136, .3);
+        width: 100%;
+        margin-top: 20px
+      }
+
+      button:disabled {
+        background: #4b5563;
+        cursor: not-allowed
+      }
+
+      .info-card {
+        background: var(--card-bg);
+        padding: 15px;
+        border-radius: 15px;
+        margin-top: 20px;
+        font-size: .9rem;
+        line-height: 1.6;
+        text-align: left;
+        border-left: 4px solid var(--primary-color)
+      }
+
+      .withdraw-section {
+        display: none;
+        margin-top: 30px;
+        background: var(--card-bg);
+        padding: 20px;
+        border-radius: 15px
+      }
+
+      input {
+        width: 90%;
+        padding: 12px;
+        margin: 10px 0;
+        border-radius: 8px;
+        border: 1px solid #4b5563;
+        background: #0f172a;
+        color: #fff
+      }
+
+      .status-msg {
+        margin-top: 10px;
+        font-size: .8rem;
+        color: #ffbc00
+      }
+    </style>
+  </head>
+  <body>
+    <div class="header">
+      <div class="balance-box">
+        <div id="coinCount" class="coin-text">0</div>
+        <div>COINS</div>
+      </div>
+      <div class="balance-box">
+        <div id="dollarValue" class="coin-text">$0.00</div>
+        <div>VALUE</div>
+      </div>
+    </div>
+    <div class="container">
+      <h2>INCOME BOT</h2>
+      <p>Total Spins: <span id="spinCount">0</span>/100 </p>
+      <div class="wheel-pointer"></div>
+      <div id="wheel" class="wheel-container">
+        <span style="font-weight:700;color:#000">SPIN</span>
+      </div>
+      <button id="spinBtn" onclick="spinWheel()">SPIN NOW</button>
+      <div class="info-card">
+        <strong>Rules & Payment Policy:</strong>
+        <ul>
+          <li>Earn 100 Coins per spin.</li>
+          <li>Conversion: 1000 Coins = $1.00.</li>
+          <li>Minimum 100 Spins required to unlock Bank Transfer.</li>
+          <li>Payments are processed within 24-48 hours after request.</li>
+        </ul>
+      </div>
+      <div id="withdrawArea" class="withdraw-section">
+        <h3>Bank Withdrawal</h3>
+        <input type="text" id="bankName" placeholder="Bank Name">
+        <input type="text" id="accNumber" placeholder="Account Number">
+        <input type="text" id="holderName" placeholder="Account Holder Name">
+        <button onclick="processWithdrawal()">REQUEST WITHDRAW</button>
+      </div>
+      <p id="lockMsg" class="status-msg">Withdrawal is locked! Complete 100 spins first.</p>
+    </div>
+    <script>
+      let coins = 0;
+      let spins = 0;
+      const spinBtn = document.getElementById('spinBtn');
+      const wheel = document.getElementById('wheel');
+      const withdrawArea = document.getElementById('withdrawArea');
+      const lockMsg = document.getElementById('lockMsg');
+
+      function spinWheel() {
+        spinBtn.disabled = true;
+        // Random rotation animation
+        const randomDeg = Math.floor(Math.random() * 360) + 1800;
+        wheel.style.transform = `rotate(${randomDeg}deg) `;
+        setTimeout(() => {
+          // Update Logic
+          coins += 100;
+          spins += 1;
+          updateDisplay();
+          checkUnlockStatus();
+          spinBtn.disabled = false;
+          wheel.style.transition = 'none';
+          wheel.style.transform = 'rotate(0deg)';
+          setTimeout(() => wheel.style.transition = 'transform 3s cubic-bezier(0.1, 0, 0.1, 1)', 50);
+          alert("Congratulations! You won 100 Coins.");
+        }, 3500);
+      }
+
+      function updateDisplay() {
+        document.getElementById('coinCount').innerText = coins;
+        document.getElementById('spinCount').innerText = spins;
+        document.getElementById('dollarValue').innerText = "$" + (coins / 1000).toFixed(2);
+      }
+
+      function checkUnlockStatus() {
+        if (spins >= 100) {
+          withdrawArea.style.display = 'block';
+          lockMsg.style.display = 'none';
+        }
+      }
+
+      function processWithdrawal() {
+        const bName = document.getElementById('bankName').value;
+        const accNum = document.getElementById('accNumber').value;
+        if (coins < 1000) {
+          alert("Minimum 1000 coins ($1) required!");
+          return;
+        }
+        if (bName && accNum) {
+          alert("Withdrawal Request Sent!\nBank: " + bName + "\nAmount: $" + (coins / 1000).toFixed(2) + "\nStatus: Pending (24-48h)");
+          coins = 0;
+          updateDisplay();
+        } else {
+          alert("Please fill all bank details.");
+        }
+      }
+    </script>
+  </body>
+</html>
